@@ -57,7 +57,8 @@
           "vite": "6.3.5"
       },
       "scripts": {
-          "dev": "vite",
-          "build": "vite build"
+        "dev": "vite",
+        "build": "chmod +x node_modules/.bin/vite && vite build",
+        "preview": "vite preview"
       }
   }
