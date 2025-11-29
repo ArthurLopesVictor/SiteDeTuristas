@@ -1,14 +1,3 @@
-/* ==============================================
-   KV STORE - Key-Value Storage Functions
-   ============================================== */
-
-/* Table schema:
-CREATE TABLE kv_store_a5c257ac (
-  key TEXT NOT NULL PRIMARY KEY,
-  value JSONB NOT NULL
-);
-*/
-
 import { createClient } from "@supabase/supabase-js";
 
 const kvClient = () => createClient(
@@ -16,7 +5,6 @@ const kvClient = () => createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? '',
 );
 
-// Set stores a key-value pair in the database.
 const kvSet = async (key: string, value: any): Promise<void> => {
   const supabase = kvClient()
   const { error } = await supabase.from("kv_store_a5c257ac").upsert({
@@ -28,7 +16,6 @@ const kvSet = async (key: string, value: any): Promise<void> => {
   }
 };
 
-// Get retrieves a key-value pair from the database.
 const kvGet = async (key: string): Promise<any> => {
   const supabase = kvClient()
   const { data, error } = await supabase.from("kv_store_a5c257ac").select("value").eq("key", key).maybeSingle();
@@ -38,7 +25,6 @@ const kvGet = async (key: string): Promise<any> => {
   return data?.value;
 };
 
-// Delete deletes a key-value pair from the database.
 const kvDel = async (key: string): Promise<void> => {
   const supabase = kvClient()
   const { error } = await supabase.from("kv_store_a5c257ac").delete().eq("key", key);
@@ -47,7 +33,6 @@ const kvDel = async (key: string): Promise<void> => {
   }
 };
 
-// Gets multiple key-value pairs from the database.
 const kvMget = async (keys: string[]): Promise<any[]> => {
   const supabase = kvClient()
   const { data, error } = await supabase.from("kv_store_a5c257ac").select("value").in("key", keys);
@@ -57,7 +42,6 @@ const kvMget = async (keys: string[]): Promise<any[]> => {
   return data?.map((d) => d.value) ?? [];
 };
 
-// Search for key-value pairs by prefix.
 const kvGetByPrefix = async (prefix: string): Promise<any[]> => {
   const supabase = kvClient()
   const { data, error } = await supabase.from("kv_store_a5c257ac").select("key, value").like("key", prefix + "%");
@@ -67,23 +51,17 @@ const kvGetByPrefix = async (prefix: string): Promise<any[]> => {
   return data?.map((d) => d.value) ?? [];
 };
 
-/* ==============================================
-   MAIN API - Hono Server
-   ============================================== */
-
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
 const app = new Hono();
 
-// Middleware
 app.use('*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Create Supabase client (admin for server operations)
 const getSupabaseAdmin = () => {
   return createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -91,7 +69,6 @@ const getSupabaseAdmin = () => {
   );
 };
 
-// Create Supabase client for user operations
 const getSupabaseClient = () => {
   return createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -99,7 +76,6 @@ const getSupabaseClient = () => {
   );
 };
 
-// Helper function to verify user authentication
 const verifyAuth = async (request: Request) => {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -119,11 +95,6 @@ const verifyAuth = async (request: Request) => {
   return user;
 };
 
-// ============================================
-// AUTH ROUTES
-// ============================================
-
-// Sign Up Route
 app.post('/make-server-a5c257ac/auth/signup', async (c) => {
   try {
     const body = await c.req.json();
@@ -135,11 +106,10 @@ app.post('/make-server-a5c257ac/auth/signup', async (c) => {
     
     const supabase = getSupabaseAdmin();
     
-    // Create user with auto-confirmed email
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email since email server is not configured
+      email_confirm: true, 
       user_metadata: { name }
     });
     
@@ -148,7 +118,6 @@ app.post('/make-server-a5c257ac/auth/signup', async (c) => {
       return c.json({ error: error.message }, 400);
     }
     
-    // Now sign in the user to get a session
     const supabaseClient = getSupabaseClient();
     const { data: sessionData, error: signInError } = await supabaseClient.auth.signInWithPassword({
       email,
@@ -174,11 +143,6 @@ app.post('/make-server-a5c257ac/auth/signup', async (c) => {
   }
 });
 
-// ============================================
-// VENDORS ROUTES
-// ============================================
-
-// Get all vendors (optionally filter by market)
 app.get('/make-server-a5c257ac/vendors', async (c) => {
   try {
     const marketId = c.req.query('market');
@@ -190,7 +154,6 @@ app.get('/make-server-a5c257ac/vendors', async (c) => {
       filteredVendors = allVendors.filter((v: any) => v.market_id === marketId);
     }
     
-    // Sort by creation date (newest first)
     filteredVendors.sort((a: any, b: any) => {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
@@ -202,7 +165,6 @@ app.get('/make-server-a5c257ac/vendors', async (c) => {
   }
 });
 
-// Create a new vendor (requires authentication)
 app.post('/make-server-a5c257ac/vendors', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -249,7 +211,6 @@ app.post('/make-server-a5c257ac/vendors', async (c) => {
   }
 });
 
-// Update a vendor (requires authentication and ownership)
 app.put('/make-server-a5c257ac/vendors/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -293,7 +254,6 @@ app.put('/make-server-a5c257ac/vendors/:id', async (c) => {
   }
 });
 
-// Get a specific vendor
 app.get('/make-server-a5c257ac/vendors/:id', async (c) => {
   try {
     const vendorId = c.req.param('id');
@@ -310,7 +270,6 @@ app.get('/make-server-a5c257ac/vendors/:id', async (c) => {
   }
 });
 
-// Delete a vendor (requires authentication and ownership)
 app.delete('/make-server-a5c257ac/vendors/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -339,25 +298,17 @@ app.delete('/make-server-a5c257ac/vendors/:id', async (c) => {
   }
 });
 
-// ============================================
-// REVIEWS ROUTES
-// ============================================
-
-// Get all reviews
 app.get('/make-server-a5c257ac/reviews', async (c) => {
   try {
     const marketId = c.req.query('market');
     
-    // Get all reviews from KV store
     const allReviews = await kvGetByPrefix('review:');
     
-    // Filter by market if specified
     let filteredReviews = allReviews;
     if (marketId) {
       filteredReviews = allReviews.filter((r: any) => r.market === marketId);
     }
     
-    // Sort by date (newest first)
     filteredReviews.sort((a: any, b: any) => {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
@@ -369,7 +320,6 @@ app.get('/make-server-a5c257ac/reviews', async (c) => {
   }
 });
 
-// Create a new review (requires authentication)
 app.post('/make-server-a5c257ac/reviews', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -396,8 +346,7 @@ app.post('/make-server-a5c257ac/reviews', async (c) => {
     if (review_type === 'market' && !market) {
       return c.json({ error: 'Market is required for market reviews' }, 400);
     }
-    
-    // Create review object
+  
     const reviewId = crypto.randomUUID();
     const review = {
       id: reviewId,
@@ -410,13 +359,12 @@ app.post('/make-server-a5c257ac/reviews', async (c) => {
       photos: photos || [],
       date: new Date().toISOString(),
       helpful: 0,
-      helpfulBy: [], // Track which users marked as helpful
+      helpfulBy: [], 
       review_type: review_type || 'market',
       vendor_id: vendor_id || null,
       vendor_name: vendor_name || null,
     };
     
-    // Save to KV store
     await kvSet(`review:${reviewId}`, review);
     
     return c.json({ review }, 201);
@@ -426,7 +374,6 @@ app.post('/make-server-a5c257ac/reviews', async (c) => {
   }
 });
 
-// Update a review (requires authentication)
 app.put('/make-server-a5c257ac/reviews/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -442,7 +389,6 @@ app.put('/make-server-a5c257ac/reviews/:id', async (c) => {
       return c.json({ error: 'Review not found' }, 404);
     }
     
-    // Check if user owns this review
     if (review.user_id !== user.id) {
       return c.json({ error: 'Unauthorized: You can only edit your own reviews' }, 403);
     }
@@ -458,7 +404,6 @@ app.put('/make-server-a5c257ac/reviews/:id', async (c) => {
       return c.json({ error: 'Rating must be between 1 and 5' }, 400);
     }
     
-    // Update review
     review.rating = rating;
     review.comment = comment;
     review.updatedAt = new Date().toISOString();
@@ -472,7 +417,6 @@ app.put('/make-server-a5c257ac/reviews/:id', async (c) => {
   }
 });
 
-// Delete a review (requires authentication)
 app.delete('/make-server-a5c257ac/reviews/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -488,12 +432,12 @@ app.delete('/make-server-a5c257ac/reviews/:id', async (c) => {
       return c.json({ error: 'Review not found' }, 404);
     }
     
-    // Check if user owns this review
+    
     if (review.user_id !== user.id) {
       return c.json({ error: 'Unauthorized: You can only delete your own reviews' }, 403);
     }
     
-    // Delete from KV store
+    
     await kvDel(`review:${reviewId}`);
     
     return c.json({ success: true, message: 'Review deleted successfully' });
@@ -503,7 +447,7 @@ app.delete('/make-server-a5c257ac/reviews/:id', async (c) => {
   }
 });
 
-// Mark review as helpful
+
 app.post('/make-server-a5c257ac/reviews/:id/helpful', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -519,16 +463,16 @@ app.post('/make-server-a5c257ac/reviews/:id/helpful', async (c) => {
       return c.json({ error: 'Review not found' }, 404);
     }
     
-    // Check if user already marked as helpful
+    
     const helpfulBy = review.helpfulBy || [];
     const alreadyMarked = helpfulBy.includes(user.id);
     
     if (alreadyMarked) {
-      // Remove helpful
+      
       review.helpfulBy = helpfulBy.filter((id: string) => id !== user.id);
       review.helpful = Math.max(0, review.helpful - 1);
     } else {
-      // Add helpful
+      
       review.helpfulBy = [...helpfulBy, user.id];
       review.helpful = (review.helpful || 0) + 1;
     }
@@ -542,18 +486,13 @@ app.post('/make-server-a5c257ac/reviews/:id/helpful', async (c) => {
   }
 });
 
-// ============================================
-// MARKETS ROUTES (User-created markets)
-// ============================================
-
-// Get all user-created markets
 app.get('/make-server-a5c257ac/markets', async (c) => {
   try {
     console.log('[Markets API] Fetching all markets...');
     const allMarkets = await kvGetByPrefix('market:');
     console.log(`[Markets API] Found ${allMarkets.length} markets`);
     
-    // Sort by creation date (newest first)
+   
     if (allMarkets.length > 0) {
       allMarkets.sort((a: any, b: any) => {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -567,7 +506,7 @@ app.get('/make-server-a5c257ac/markets', async (c) => {
   }
 });
 
-// Get a specific market
+
 app.get('/make-server-a5c257ac/markets/:id', async (c) => {
   try {
     const marketId = c.req.param('id');
@@ -584,7 +523,6 @@ app.get('/make-server-a5c257ac/markets/:id', async (c) => {
   }
 });
 
-// Create a new market (requires authentication)
 app.post('/make-server-a5c257ac/markets', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -630,7 +568,6 @@ app.post('/make-server-a5c257ac/markets', async (c) => {
   }
 });
 
-// Update a market (requires authentication and ownership)
 app.put('/make-server-a5c257ac/markets/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -675,7 +612,6 @@ app.put('/make-server-a5c257ac/markets/:id', async (c) => {
   }
 });
 
-// Delete a market (requires authentication and ownership)
 app.delete('/make-server-a5c257ac/markets/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -695,7 +631,7 @@ app.delete('/make-server-a5c257ac/markets/:id', async (c) => {
       return c.json({ error: 'Unauthorized: You can only delete your own markets' }, 403);
     }
     
-    // Delete associated itineraries
+    
     const allItineraries = await kvGetByPrefix('itinerary:');
     const marketItineraries = allItineraries.filter((i: any) => i.market_id === marketId);
     for (const itinerary of marketItineraries) {
@@ -711,11 +647,6 @@ app.delete('/make-server-a5c257ac/markets/:id', async (c) => {
   }
 });
 
-// ============================================
-// CUSTOM ITINERARIES ROUTES
-// ============================================
-
-// Get all itineraries (optionally filtered by market)
 app.get('/make-server-a5c257ac/itineraries', async (c) => {
   try {
     const marketId = c.req.query('market');
@@ -727,7 +658,6 @@ app.get('/make-server-a5c257ac/itineraries', async (c) => {
       filteredItineraries = allItineraries.filter((i: any) => i.market_id === marketId);
     }
     
-    // Sort by creation date (newest first)
     filteredItineraries.sort((a: any, b: any) => {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
@@ -739,7 +669,6 @@ app.get('/make-server-a5c257ac/itineraries', async (c) => {
   }
 });
 
-// Create a custom itinerary (requires authentication)
 app.post('/make-server-a5c257ac/itineraries', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -778,7 +707,6 @@ app.post('/make-server-a5c257ac/itineraries', async (c) => {
   }
 });
 
-// Update an itinerary (requires authentication and ownership)
 app.put('/make-server-a5c257ac/itineraries/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -816,7 +744,6 @@ app.put('/make-server-a5c257ac/itineraries/:id', async (c) => {
   }
 });
 
-// Delete an itinerary (requires authentication and ownership)
 app.delete('/make-server-a5c257ac/itineraries/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -845,11 +772,6 @@ app.delete('/make-server-a5c257ac/itineraries/:id', async (c) => {
   }
 });
 
-// ============================================
-// FAVORITES ROUTES
-// ============================================
-
-// Get user's favorites
 app.get('/make-server-a5c257ac/favorites', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -860,7 +782,7 @@ app.get('/make-server-a5c257ac/favorites', async (c) => {
     
     let favorites = await kvGet(`favorites:${user.id}`);
     
-    // Ensure favorites always has the correct structure
+   
     if (!favorites || typeof favorites !== 'object') {
       favorites = { markets: [], vendors: [] };
     }
@@ -882,7 +804,7 @@ app.get('/make-server-a5c257ac/favorites', async (c) => {
   }
 });
 
-// Add to favorites
+
 app.post('/make-server-a5c257ac/favorites', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -906,7 +828,7 @@ app.post('/make-server-a5c257ac/favorites', async (c) => {
     
     let favorites = await kvGet(`favorites:${user.id}`);
     
-    // Ensure favorites has the correct structure
+   
     if (!favorites || typeof favorites !== 'object') {
       favorites = { markets: [], vendors: [] };
     }
@@ -926,7 +848,7 @@ app.post('/make-server-a5c257ac/favorites', async (c) => {
     };
     
     if (type === 'market') {
-      // Check if already in favorites
+    
       if (!favorites.markets.some((m: any) => m.id === target_id)) {
         favorites.markets.push(favoriteItem);
         console.log(`Added market to favorites. Total markets: ${favorites.markets.length}`);
@@ -934,7 +856,7 @@ app.post('/make-server-a5c257ac/favorites', async (c) => {
         console.log('Market already in favorites');
       }
     } else {
-      // Check if already in favorites
+    
       if (!favorites.vendors.some((v: any) => v.id === target_id)) {
         favorites.vendors.push(favoriteItem);
         console.log(`Added vendor to favorites. Total vendors: ${favorites.vendors.length}`);
@@ -953,7 +875,7 @@ app.post('/make-server-a5c257ac/favorites', async (c) => {
   }
 });
 
-// Remove from favorites
+
 app.delete('/make-server-a5c257ac/favorites/:type/:id', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -973,7 +895,7 @@ app.delete('/make-server-a5c257ac/favorites/:type/:id', async (c) => {
     
     let favorites = await kvGet(`favorites:${user.id}`);
     
-    // Ensure favorites has the correct structure
+    
     if (!favorites || typeof favorites !== 'object') {
       favorites = { markets: [], vendors: [] };
     }
@@ -1006,11 +928,6 @@ app.delete('/make-server-a5c257ac/favorites/:type/:id', async (c) => {
   }
 });
 
-// ============================================
-// USER PROFILE ROUTES
-// ============================================
-
-// Get user profile
 app.get('/make-server-a5c257ac/profile', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);
@@ -1033,7 +950,6 @@ app.get('/make-server-a5c257ac/profile', async (c) => {
   }
 });
 
-// Update user profile
 app.put('/make-server-a5c257ac/profile', async (c) => {
   try {
     const user = await verifyAuth(c.req.raw);

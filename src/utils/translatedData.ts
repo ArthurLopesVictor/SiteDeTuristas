@@ -1,10 +1,9 @@
-// This file provides translated content while keeping proper nouns in Portuguese
 export const getTranslatedMarketData = (t: (key: string) => string) => [
   {
     id: 'sao-jose',
-    name: 'Mercado de São José', // Nome próprio mantido
+    name: 'Mercado de São José', 
     description: t('data.markets.saoJose.desc'),
-    location: 'Praça Dom Vital, s/n - São José, Recife', // Endereço mantido
+    location: 'Praça Dom Vital, s/n - São José, Recife',
     hours: t('data.markets.saoJose.hours'),
     image: 'https://images.unsplash.com/photo-1706097715393-45455755b017?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxicmF6aWxpYW4lMjBzdHJlZXQlMjBtYXJrZXQlMjBjb2xvcmZ1bHxlbnwxfHx8fDE3NjAwMjc0MDR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     lat: -8.0638,
