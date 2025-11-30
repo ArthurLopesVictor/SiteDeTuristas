@@ -10,7 +10,7 @@ import { Search, MapPin, Heart, Loader2, Store, Users } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { getTranslatedVendorsData, getTranslatedMarketData } from '../utils/translatedData';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from './image/ImageWithFallback';
 
 interface Market {
   id: string;

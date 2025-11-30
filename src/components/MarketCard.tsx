@@ -1,6 +1,6 @@
 import { Card, CardContent } from "./ui/card";
 import { MapPin, Clock } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./image/ImageWithFallback";
 
 interface MarketCardProps {
   name: string;
